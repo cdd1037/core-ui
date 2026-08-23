@@ -1,0 +1,53 @@
+name: Build Windows DLL
+
+on:
+  push:
+    branches:
+      - codex/fix-uix-navigation-controls
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: recursive
+
+      - name: Locate Visual Studio and clang-cl
+        id: toolchain
+        shell: pwsh
+        run: |
+          $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+          $vsPath = & $vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
+          if (-not $vsPath) { throw "Visual Studio with C++ tools was not found." }
+
+          $clangCl = Join-Path $vsPath 'VC\Tools\Llvm\x64\bin\clang-cl.exe'
+          if (-not (Test-Path -LiteralPath $clangCl)) {
+            $clangCl = (Get-Command clang-cl -ErrorAction Stop).Source
+          }
+
+          "vs_path=$vsPath" >> $env:GITHUB_OUTPUT
+          "clang_cl=$clangCl" >> $env:GITHUB_OUTPUT
+
+      - name: Build optimized Release DLL
+        shell: pwsh
+        run: |
+          ./scripts/build-clang-cl.ps1 `
+            -Target core-ui `
+            -VsPath '${{ steps.toolchain.outputs.vs_path }}' `
+            -ClangClPath '${{ steps.toolchain.outputs.clang_cl }}'
+
+      - name: Upload DLL and import library
+        uses: actions/upload-artifact@v4
+        with:
+          name: core-ui-v1.7.0-windows-x64
+          if-no-files-found: error
+          path: |
+            clang-cl-build/core-ui.dll
+            clang-cl-build/core-ui.lib
+            include/ui_core.h
