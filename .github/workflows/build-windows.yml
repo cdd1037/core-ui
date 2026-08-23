@@ -49,12 +49,24 @@ jobs:
           $env:PATH = "$PWD\clang-cl-build;$env:PATH"
           & .\clang-cl-build\scroll_view_layout_test.exe
 
-      - name: Upload DLL and import library
+      - name: Build release package
+        shell: pwsh
+        run: |
+          cmake --build clang-cl-build --config Release --target release-package
+
+          $packageRoot = Join-Path $PWD 'release\core-ui-v1.7.0'
+          $archive = Join-Path $PWD 'core-ui-v1.7.0-cdd.1-windows-x64.zip'
+          Compress-Archive -LiteralPath $packageRoot -DestinationPath $archive
+
+          $digest = (Get-FileHash -Algorithm SHA256 -LiteralPath $archive).Hash.ToLowerInvariant()
+          $checksum = "$digest  $(Split-Path -Leaf $archive)"
+          Set-Content -LiteralPath "$archive.sha256" -Value $checksum -Encoding ascii
+
+      - name: Upload Windows SDK package
         uses: actions/upload-artifact@v4
         with:
-          name: core-ui-v1.7.0-windows-x64
+          name: core-ui-v1.7.0-cdd.1-windows-x64
           if-no-files-found: error
           path: |
-            clang-cl-build/core-ui.dll
-            clang-cl-build/core-ui.lib
-            include/ui_core.h
+            core-ui-v1.7.0-cdd.1-windows-x64.zip
+            core-ui-v1.7.0-cdd.1-windows-x64.zip.sha256
