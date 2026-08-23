@@ -42,6 +42,13 @@ jobs:
             -VsPath '${{ steps.toolchain.outputs.vs_path }}' `
             -ClangClPath '${{ steps.toolchain.outputs.clang_cl }}'
 
+      - name: Build and run ScrollView regression test
+        shell: pwsh
+        run: |
+          cmake --build clang-cl-build --config Release --target scroll_view_layout_test
+          $env:PATH = "$PWD\clang-cl-build;$env:PATH"
+          & .\clang-cl-build\scroll_view_layout_test.exe
+
       - name: Upload DLL and import library
         uses: actions/upload-artifact@v4
         with:
