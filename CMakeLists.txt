@@ -257,6 +257,16 @@ endif()
 
 option(UI_CORE_BUILD_INTERNAL_TESTS
     "Build internal regression test targets when test/ is available" ON)
+if(UI_CORE_BUILD_INTERNAL_TESTS AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/test/src/scroll_view_layout_test.cpp")
+    add_executable(scroll_view_layout_test EXCLUDE_FROM_ALL
+        test/src/scroll_view_layout_test.cpp
+    )
+    target_compile_definitions(scroll_view_layout_test PRIVATE
+        UNICODE _UNICODE WIN32_LEAN_AND_MEAN NOMINMAX)
+    target_include_directories(scroll_view_layout_test PRIVATE src/ui)
+    target_link_libraries(scroll_view_layout_test PRIVATE core-ui)
+endif()
+
 if(UI_CORE_BUILD_INTERNAL_TESTS AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/test/src/svg_normalize_test.cpp")
     # 测试全部用 assert() 断言。Release 构建带 /DNDEBUG 会把 assert 编成空操作 ——
     # 那样测试只会打印 PASS 而什么都不检查 (2026-07 发现: 全部 9 个测试目标已空跑
