@@ -620,6 +620,8 @@ private:
 
     float ThumbWidth() const { return (hoveringBar_ || draggingThumb_) ? kThumbWide : kThumbThin; }
     void ClampScroll();
+    D2D1_RECT_F ViewportRect() const;
+    void DrawScrollbar(Renderer& r);
 
     /* 纯滚动路径 (build 285): 只有 scrollY_ 变了、内容一个字没动时用。
      * DoLayout() 会跑两遍 content_->DoLayout() (一遍量高度一遍定位) 外加一次
