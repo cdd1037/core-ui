@@ -148,6 +148,8 @@ powershell -NoProfile -ExecutionPolicy Bypass `
   -File scripts/build-clang-cl.ps1 -Target core-ui
 ```
 
+This fork also publishes a Windows x64 SDK from GitHub Releases. The fork SDK is built with the **static MSVC CRT (`/MT`)**, so downstream applications do not need `MSVCP140.dll`, `VCRUNTIME140*.dll`, or `CONCRT140.dll`. The release archive contains `include/ui_core.h` plus `lib/dynamic/core-ui.dll` and its import library, and is intended for portable downstream applications such as San9 Toolkit.
+
 | Target | Artifact |
 |---|---|
 | `core-ui` | `core-ui.dll` + `core-ui.lib` import library (default) |
@@ -155,7 +157,7 @@ powershell -NoProfile -ExecutionPolicy Bypass `
 | `ui-demo-uix` | `ui-demo-uix.exe` single-file demo (resources baked in) |
 | `golden_runner` | `golden_runner.exe` golden-image regression runner |
 
-Pass `-Clean` to rebuild from scratch; omit `-Target` to build everything; `-Static` produces a single exe (no DLL dependency).
+Pass `-Clean` to rebuild from scratch; omit `-Target` to build everything; pass `-StaticCrt` to link the MSVC C/C++ runtime statically. Applications that want Core UI itself linked into the executable should use the CMake `UI_CORE_STATIC` option.
 
 ### Hello World
 
