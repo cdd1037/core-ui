@@ -157,9 +157,22 @@ export default {
 `$event`：
 | 事件 | $event |
 |------|--------|
-| `click` / `focus` / `blur` / `submit` | `undefined` |
-| `mousedown` / `mousemove` / `mouseup` / `wheel` / `dblclick` | `{x, y, delta, button}` |
+| `click` / `focus` / `blur` / `submit` / `mouseleave` | `undefined` |
+| `mousedown` / `mousemove` / `mouseup` / `wheel` / `dblclick` / `mouseenter` / `contextmenu` | DOM 风格 `{offsetX, offsetY, clientX, clientY, button, buttons, deltaX, deltaY, ctrlKey, shiftKey, altKey}`（兼容旧 `x/y/delta`；`deltaY` 正值=向下，web 约定） |
 | `change` / `input` | scalar (bool / string / float) |
+| `dragstart` | 鼠标字段 + `data`（载荷，可改写 = setData） |
+| `dragenter` / `dragover` | 鼠标字段 |
+| `dragleave` | `undefined` |
+| `drop` | 鼠标字段 + `data` |
+| `dragend` | bool（是否成功投放） |
+
+拖放属性：`draggable="true"`、`drag-data="payload"`（隐含 draggable）、
+`drop-target="true"`（绑 `@drop` 亦隐含）。拖动悬停目标进入 `:drag-over` 伪类。
+
+`<chips-input>`：单行模板编辑器（原子变量 chip + 自由文本）。属性
+`placeholder`、`chip-labels="key=显示名;..."`；`:value`/`v-model`/`@change`
+的值是模板串（chip 记作 `{key}`）。天然接受拖放（载荷=chip key），不要在其上
+另绑 `@drop`。
 
 ### 5.4 控制流
 
@@ -244,8 +257,11 @@ CSS 子集 + 选择器 + cascade。常用属性：
 | 标签 | 作用 |
 |------|------|
 | `div` / `section` / `nav` | flex 容器 (默认 column) |
+| `Stack` | 只显示一个子页面的容器；`active` 指定当前索引 |
+| `SplitView` | 侧栏 + 内容双槽布局；前两个元素子节点分别作为侧栏和内容 |
 | `label` / `span` / `p` / `h1`-`h6` | 文本（不可编辑） |
 | `button` | 按钮 |
+| `NavItem` | 侧栏导航项；支持 `text` / `svg` / `glyph` / `selected` |
 | `input` | 文本输入；`type="password"` / `checkbox` / `radio` / `range` / `number` 切换形态 |
 | `textarea` | 多行文本 |
 | `toggle` | 开关 |
@@ -257,6 +273,8 @@ CSS 子集 + 选择器 + cascade。常用属性：
 | `img` | 位图 / SVG 资源 |
 | `svg` | SVG 子树 |
 | `custom` | 自绘 widget |
+| `gh-img-view` | 通用瓦块画布（数据由宿主经 C API 喂） |
+| `ocr-img-view` | 图片划词画布（同上；`highlight-color` 可静态指定） |
 | `tabs` | 标签页容器 |
 | `menu` / `menuitem` / `separator` | 上下文菜单 |
 

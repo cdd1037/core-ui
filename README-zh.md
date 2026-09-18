@@ -148,6 +148,8 @@ powershell -NoProfile -ExecutionPolicy Bypass `
   -File scripts/build-clang-cl.ps1 -Target core-ui
 ```
 
+本 fork 同时在 GitHub Releases 发布 Windows x64 SDK。发布版使用 **静态 MSVC CRT（`/MT`）**，下游程序无需依赖 `MSVCP140.dll`、`VCRUNTIME140*.dll` 或 `CONCRT140.dll`。发布 ZIP 包含 `include/ui_core.h`、`lib/dynamic/core-ui.dll` 及其导入库，供 San9 Toolkit 等便携应用直接使用，无需每次从源码重编 Core UI。
+
 | Target | 产物 |
 |---|---|
 | `core-ui` | `core-ui.dll` + `core-ui.lib` 导入库（默认） |
@@ -155,7 +157,7 @@ powershell -NoProfile -ExecutionPolicy Bypass `
 | `ui-demo-uix` | `ui-demo-uix.exe` 单文件 demo（资源烤进 exe） |
 | `golden_runner` | `golden_runner.exe` 黄金图回归测试 |
 
-加 `-Clean` 强制重建 build 目录；省略 `-Target` 编全部；`-Static` 产单 exe（无 DLL 依赖）。
+加 `-Clean` 强制重建 build 目录；省略 `-Target` 编全部；加 `-StaticCrt` 可让 MSVC C/C++ 运行库静态链接。若希望把 Core UI 本身也静态链接进最终 EXE，请使用 CMake 的 `UI_CORE_STATIC` 选项。
 
 ### Hello World
 

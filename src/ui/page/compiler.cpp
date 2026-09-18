@@ -746,6 +746,9 @@ void CompileElement(CompilerCtx& ctx,
                 pm.id  = p->id;
                 pm.classes = p->classList;
                 for (const auto& c : p->dynamicClasses) pm.classes.push_back(c);
+                // 祖先伪类参与匹配 (`.zone:hover .btn`): 不带状态位的话这类
+                // 选择器永远匹配失败。
+                pm.stateBits = p->CurrentStateBits();
                 chain.push_back(std::move(pm));
             }
             for (size_t i = 0; i < chain.size(); ++i) {
@@ -913,6 +916,8 @@ void CompileElement(CompilerCtx& ctx,
             }
         }
     }
+
+    bool isSplitView = (node.tag == "SplitView" || node.tag == "split-view");
 
     // ---- <svg>: fold child elements into SvgShape / SvgGradient entries ----
     // Children like <circle>/<rect>/... do NOT become widgets. Their static
@@ -1335,11 +1340,46 @@ void CompileElement(CompilerCtx& ctx,
             }
         }
         if (!reportedNest) {
+            int splitSlot = 0;
             for (const auto& c : node.children) {
                 if (c->kind == ui::uix::NodeKind::Element) {
+                    if (isSplitView && splitSlot >= 2) {
+                        ctx.out->errors.push_back(
+                            "<SplitView> accepts exactly two element children: pane and content");
+                        continue;
+                    }
                     CompileElement(ctx, *c, &m, w.get());
+                    if (isSplitView) ++splitSlot;
                 }
             }
+        }
+    }
+
+    // ---- <SplitView> post-process ----
+    // Children are compiled normally first so their bindings/events keep the
+    // same path as any other UIX subtree. Then assign the first child to the
+    // pane slot and the second to the content slot expected by SplitViewWidget.
+    if (isSplitView) {
+        auto* split = dynamic_cast<SplitViewWidget*>(w.get());
+        auto children = w->Children();
+        if (children.size() != 2) {
+            ctx.out->errors.push_back(
+                "<SplitView> requires exactly two element children: pane and content");
+        } else if (split) {
+            w->Children().clear();
+            split->SetPane(children[0]);
+            split->SetContent(children[1]);
+        }
+    }
+
+    // ---- <Stack> static active index ----
+    // Apply after child compilation; applying in the factory would run before
+    // the child count is known and SetActiveIndex would reject non-zero pages.
+    if (auto* stack = dynamic_cast<StackWidget*>(w.get())) {
+        for (const auto& a : node.attrs) {
+            if (a.kind != ui::uix::AttrKind::Static || a.name != "active") continue;
+            try { stack->SetActiveIndex(std::stoi(a.rawValue)); } catch (...) {}
+            break;
         }
     }
 
